@@ -16,13 +16,13 @@ var TABLES = []string{
 	"kline60min",
 	"kline4hour",
 	"kline1day",
-	"kline1mon",
 	"kline1week",
+	"kline1mon",
 	"kline1year",
 }
 
 type DBO struct {
-	dbc *sql.DB
+	DBC *sql.DB
 }
 
 func (dbo *DBO) Init() *DBO {
@@ -31,7 +31,7 @@ func (dbo *DBO) Init() *DBO {
 	if err != nil {
 		panic(err)
 	}
-	dbo.dbc = db
+	dbo.DBC = db
 	return dbo
 }
 
@@ -50,7 +50,7 @@ func CreateDBIfNotExist() {
 }
 func CreateTableIfNotExist() {
 	dbo := new(DBO).Init()
-	defer dbo.dbc.Close()
+	defer dbo.DBC.Close()
 
 	for _, s := range TABLES {
 		sqlCreateTable := fmt.Sprintf(`
@@ -68,7 +68,7 @@ create table %s
 	UNIQUE index symbol_id(id desc)
 )
 `, s)
-		dbo.dbc.Exec(sqlCreateTable)
+		dbo.DBC.Exec(sqlCreateTable)
 	}
 
 }
