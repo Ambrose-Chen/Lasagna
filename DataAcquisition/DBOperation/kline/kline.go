@@ -2,12 +2,13 @@ package kline
 
 import (
 	"fmt"
+	"github.com/Ambrose-Chen/Lasagna/DataAcquisition/DBOperation"
+	"github.com/huobirdcenter/huobi_golang/logging/applogger"
 	"github.com/huobirdcenter/huobi_golang/pkg/model/market"
-	"github.com/kuianchen/Lasagna/DataAcquisition/DBOperation"
 	"time"
 )
 
-var periodTable = map[string]string{
+var PeriodTable = map[string]string{
 	market.MIN1:  DBOperation.TABLES[0],
 	market.MIN5:  DBOperation.TABLES[1],
 	market.MIN15: DBOperation.TABLES[2],
@@ -29,7 +30,7 @@ type Kline struct {
 func (k *Kline) Init(symbol string, period string) *Kline {
 	k.symbol = symbol
 	k.period = period
-	k.tableName = periodTable[period]
+	k.tableName = PeriodTable[period]
 	return k
 }
 
@@ -60,19 +61,25 @@ func getNextTimestamp(maxId int64, period string) int64 {
 }
 
 func (k *Kline) Insert(candlestick []market.Candlestick) {
-	fmt.Printf("%v\n", getNextTimestamp(1606752000, market.MON1))
-	maxId := k.getMaxId()
-	if maxId == 0 || (maxId != 0 && candlestick[len(candlestick)-1].Id == getNextTimestamp(maxId, k.period)) {
-		dbo := new(DBOperation.DBO).Init()
-		defer dbo.DBC.Close()
-		//for i, v := range candlestick {
-		//	rows, err := dbo.DBC.Query(fmt.Sprintf("SELECT max(id) id FROM %s WHERE symbol = ? ", k.tableName), k.symbol)
-		//	if err != nil {
-		//		panic(err)
-		//	}
-		//}
+	//maxId := k.getMaxId()
+	//
+	//if maxId == 0 || (maxId != 0 && candlestick[len(candlestick)-1].Id == getNextTimestamp(maxId, k.period)) {
+	dbo := new(DBOperation.DBO).Init()
+	for i := len(candlestick) - 1; i >= 0; i-- {
+		v := candlestick[i]
+		_, err := dbo.DBC.Exec(
+			fmt.Sprintf("INSERT INTO `lasagna`.`%s`(`symbol`,`id`,`open`,`close`,`low`,`high`,`count`,`vol`,`amount`)VALUES(?,?,?,?,?,?,?,?,?)", k.tableName),
+			k.symbol, v.Id, v.Open, v.Close, v.Low, v.High, v.Count, v.Vol, v.Amount)
+		if err != nil {
+			applogger.Warn("%v", err)
+		}
 	}
-	//if maxId == 0|masId+period_second[period_second]>=
+
+	err := dbo.DBC.Close()
+	if err != nil {
+		applogger.Error("%v", err)
+	}
+	//}
 }
 
 func (k *Kline) GetKline(StartTime int64, EndTime int64) {
@@ -83,10 +90,25 @@ func (k *Kline) getMaxId() int64 {
 	dbo := new(DBOperation.DBO).Init()
 	rows, err := dbo.DBC.Query(fmt.Sprintf("SELECT max(id) id FROM %s WHERE symbol = ? ", k.tableName), k.symbol)
 	if err != nil {
-		panic(err)
+		applogger.Error("%v", err)
 	}
 	var id int64
 	rows.Next()
-	rows.Scan(&id)
+
+	err = rows.Scan(&id)
+	if err != nil {
+		applogger.Warn("%v", err)
+	}
+
+	err = rows.Close()
+	if err != nil {
+		applogger.Error("%v", err)
+	}
+
+	err = dbo.DBC.Close()
+	if err != nil {
+		applogger.Error("%v", err)
+	}
+
 	return id
 }

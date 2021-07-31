@@ -3,7 +3,7 @@ package DBOperation
 import (
 	"database/sql"
 	"fmt"
-	"github.com/kuianchen/Lasagna/config"
+	"github.com/Ambrose-Chen/Lasagna/config"
 )
 
 const DBNAME = "lasagna"
@@ -53,21 +53,7 @@ func CreateTableIfNotExist() {
 	defer dbo.DBC.Close()
 
 	for _, s := range TABLES {
-		sqlCreateTable := fmt.Sprintf(`
-create table %s
-(
-	symbol VARCHAR(20) primary key,
-    id int,
-	open double,
-	close double,
-	low double,
-	high double,
-	count int,
-	vol double,
-	amount double,
-	UNIQUE index symbol_id(id desc)
-)
-`, s)
+		sqlCreateTable := fmt.Sprintf("create table %s(symbol VARCHAR(20),id int,open double,close double,low double,high double,count int,vol double,amount double,PRIMARY KEY (`symbol`,`id`))", s)
 		dbo.DBC.Exec(sqlCreateTable)
 	}
 
