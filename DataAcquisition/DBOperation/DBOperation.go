@@ -8,7 +8,7 @@ import (
 
 const DBNAME = "lasagna"
 
-var TABLES = []string{
+var TABLESPREFIX = []string{
 	"kline1min",
 	"kline5min",
 	"kline15min",
@@ -46,15 +46,13 @@ func CreateDBIfNotExist() {
 	sqlCreateDB := "create database " + DBNAME
 	db.Exec(sqlCreateDB)
 
-	CreateTableIfNotExist()
+	//CreateTableIfNotExist()
 }
-func CreateTableIfNotExist() {
+func CreateTableIfNotExist(tableName string) {
 	dbo := new(DBO).Init()
 	defer dbo.DBC.Close()
 
-	for _, s := range TABLES {
-		sqlCreateTable := fmt.Sprintf("create table %s(symbol VARCHAR(20),id int,open double,close double,low double,high double,count int,vol double,amount double,PRIMARY KEY (`symbol`,`id`))", s)
-		dbo.DBC.Exec(sqlCreateTable)
-	}
+	sqlCreateTable := fmt.Sprintf("create table %s(id int,open double,close double,low double,high double,count int,vol double,amount double,PRIMARY KEY (`id`))", tableName)
+	dbo.DBC.Exec(sqlCreateTable)
 
 }

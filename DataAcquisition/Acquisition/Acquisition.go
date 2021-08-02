@@ -35,7 +35,7 @@ func AcqBySymbolPeriod(symbol string, period string) {
 func AcqBySymbol(symbol string) {
 	ch = make(chan int, maxRoutineNum)
 	wg := sync.WaitGroup{}
-	for period := range kline.PeriodTable {
+	for period := range kline.PeriodTablePrefix {
 		ch <- 1
 		wg.Add(1)
 		go acqBySymbolPeriod(symbol, period, &wg)
@@ -51,7 +51,7 @@ func AcqAllSymbol() {
 		applogger.Error("%v", err)
 	}
 	for _, symbol := range symbols {
-		for period := range kline.PeriodTable {
+		for period := range kline.PeriodTablePrefix {
 			ch <- 1
 			wg.Add(1)
 			go acqBySymbolPeriod(symbol.Symbol, period, &wg)
